@@ -11,13 +11,16 @@ const app = express();
 let databaseConnection;
 app.disable("x-powered-by");
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
+
 const allowedOrigins = (process.env.FRONTEND_URL || "http://localhost:3000")
   .split(",")
-  .map((value) => value.trim());
+  .map((value) => value.trim().replace(/\/$/, ""));
+
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || allowedOrigins.includes(origin))
+      const normalizedOrigin = origin ? origin.replace(/\/$/, "") : "";
+      if (!origin || allowedOrigins.includes(normalizedOrigin))
         return callback(null, true);
       return callback(new Error("Origin is not allowed by CORS."));
     },
@@ -25,8 +28,10 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   }),
 );
+
 app.use(express.json({ limit: "3mb" }));
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
+
 app.use(
   "/api/auth",
   rateLimit({
@@ -36,6 +41,7 @@ app.use(
     legacyHeaders: false,
   }),
 );
+
 app.get("/api/health", (req, res) =>
   res.json({
     status: "ok",
@@ -43,6 +49,7 @@ app.get("/api/health", (req, res) =>
     time: new Date().toISOString(),
   }),
 );
+
 app.use("/api", async (req, res, next) => {
   try {
     if (mongoose.connection.readyState !== 1) {
@@ -59,10 +66,13 @@ app.use("/api", async (req, res, next) => {
     next(error);
   }
 });
+
 app.use("/api", apiRoutes);
+
 app.use((req, res) =>
   res.status(404).json({ message: "API route not found." }),
 );
+
 app.use((error, req, res, next) => {
   console.error(error);
   if (res.headersSent) return next(error);
@@ -93,4 +103,5 @@ app.use((error, req, res, next) => {
         : error.message || "Internal server error.",
   });
 });
+
 module.exports = app;
