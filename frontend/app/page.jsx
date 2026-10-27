@@ -166,9 +166,10 @@ export default function Home() {
   useGSAP(() => {
     if (!ready || !user || !pageMotionRef.current) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const panels = gsap.utils.toArray(".panel", pageMotionRef.current);
+    const panels = Array.from(pageMotionRef.current.querySelectorAll(".panel"));
+    if (!panels.length) return;
     gsap.fromTo(panels, { autoAlpha: 0, y: 8 }, { autoAlpha: 1, y: 0, duration: 0.35, stagger: 0.035, ease: "power2.out" });
-  }, { scope: pageMotionRef, dependencies: [page, ready, user], revertOnUpdate: true });
+  }, { dependencies: [page, ready, user], revertOnUpdate: true });
 
   useEffect(() => {
     const token = window.localStorage.getItem("hcm_token");

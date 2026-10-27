@@ -60,12 +60,16 @@ export function AuthScreen({ onLogin, theme = "light", onToggleTheme }) {
   const roleCardsRef = useRef(null);
   useGSAP(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    gsap.fromTo(authRef.current?.querySelectorAll("[data-auth-enter]") || [], { autoAlpha: 0, y: 14 }, { autoAlpha: 1, y: 0, duration: 0.5, stagger: 0.1, ease: "power2.out" });
-  }, { scope: authRef });
+    const targets = authRef.current?.querySelectorAll("[data-auth-enter]");
+    if (!targets?.length) return;
+    gsap.fromTo(targets, { autoAlpha: 0, y: 14 }, { autoAlpha: 1, y: 0, duration: 0.5, stagger: 0.1, ease: "power2.out" });
+  });
   useGSAP(() => {
-    if (setup || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    gsap.fromTo(roleCardsRef.current?.querySelectorAll("[data-role-card]") || [], { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: 0.32, stagger: 0.07, ease: "power2.out" });
-  }, { scope: roleCardsRef, dependencies: [setup], revertOnUpdate: true });
+    if (setup || checking || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const cards = roleCardsRef.current?.querySelectorAll("[data-role-card]");
+    if (!cards?.length) return;
+    gsap.fromTo(cards, { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: 0.32, stagger: 0.07, ease: "power2.out" });
+  }, { dependencies: [setup, checking], revertOnUpdate: true });
   useEffect(() => {
     api
       .get("/status")
@@ -422,10 +426,11 @@ export function Table({ columns, rows = [], emptyTitle, emptyMessage }) {
   useGSAP(() => {
     if (!tableMotionRef.current || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const visibleRows = Array.from(tableMotionRef.current.querySelectorAll("tbody tr")).slice(0, 10);
+    if (!visibleRows.length) return;
     gsap.fromTo(visibleRows, { autoAlpha: 0, y: 5 }, {
       autoAlpha: 1, y: 0, duration: 0.24, stagger: 0.025, ease: "power2.out",
     });
-  }, { scope: tableMotionRef, dependencies: [currentPage, rows.length], revertOnUpdate: true });
+  }, { dependencies: [currentPage, rows.length], revertOnUpdate: true });
 
   useEffect(() => {
     setCurrentPage((page) => Math.min(page, pageCount));
@@ -513,7 +518,7 @@ export function Modal({ title, children, onClose }) {
     gsap.fromTo(modalMotionRef.current, { autoAlpha: 0, y: 14, scale: 0.985 }, {
       autoAlpha: 1, y: 0, scale: 1, duration: 0.24, ease: "power2.out",
     });
-  }, { scope: modalMotionRef });
+  });
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-0 backdrop-blur-[3px] sm:items-center sm:p-4"
