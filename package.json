@@ -1,0 +1,13 @@
+{
+  "name": "hcm-lite",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": ["frontend", "backend"],
+  "scripts": {
+    "dev": "concurrently \"npm run dev -w backend\" \"npm run dev -w frontend\"",
+    "build": "npm run build -w frontend && npm run check -w backend",
+    "start": "concurrently \"npm run start -w backend\" \"npm run start -w frontend\"",
+    "test": "npm run test -w backend"
+  },
+  "devDependencies": { "concurrently": "^9.2.1" }
+}
